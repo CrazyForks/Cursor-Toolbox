@@ -37,8 +37,12 @@ jobs:
         run: |
           $tag = '${{ github.ref_name }}'
           $zipName = "cursor-toolbox-$tag.zip"
+          $rootDir = "cursor-toolbox-$tag"
           if (Test-Path $zipName) { Remove-Item $zipName -Force }
-          Compress-Archive -Path release\* -DestinationPath $zipName
+          if (Test-Path $rootDir) { Remove-Item $rootDir -Recurse -Force }
+          New-Item -ItemType Directory -Path $rootDir | Out-Null
+          Copy-Item -Path release\* -Destination $rootDir -Recurse -Force
+          Compress-Archive -Path $rootDir -DestinationPath $zipName
           "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Publish GitHub Release
