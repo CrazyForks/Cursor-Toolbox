@@ -935,20 +935,19 @@ function init() {
 chrome.storage.local.get({
   enabled: true,
   [THINKING_INJECTION_STORAGE_KEY]: false,
-  [AUTO_CONTINUE_FROM_CUTOFF_STORAGE_KEY]: false,
   [GLOBAL_PROMPT_INSTRUCTION_STORAGE_KEY]: ''
 }, (result) => {
   isPluginEnabled = result.enabled !== false;
   const storedThinkingToggle = result[THINKING_INJECTION_STORAGE_KEY];
   const storedAutoContinue = result[AUTO_CONTINUE_FROM_CUTOFF_STORAGE_KEY];
   isThinkingInjectionEnabled = storedThinkingToggle === true;
-  isAutoContinueFromCutoffEnabled = storedAutoContinue === true;
+  isAutoContinueFromCutoffEnabled = storedAutoContinue !== false;
   globalPromptInstruction = normalizeGlobalPromptInstructionText(result[GLOBAL_PROMPT_INSTRUCTION_STORAGE_KEY]);
   if (storedThinkingToggle === undefined) {
     chrome.storage.local.set({ [THINKING_INJECTION_STORAGE_KEY]: false });
   }
   if (storedAutoContinue === undefined) {
-    chrome.storage.local.set({ [AUTO_CONTINUE_FROM_CUTOFF_STORAGE_KEY]: false });
+    chrome.storage.local.set({ [AUTO_CONTINUE_FROM_CUTOFF_STORAGE_KEY]: true });
   }
   if (result[GLOBAL_PROMPT_INSTRUCTION_STORAGE_KEY] === undefined) {
     chrome.storage.local.set({ [GLOBAL_PROMPT_INSTRUCTION_STORAGE_KEY]: '' });

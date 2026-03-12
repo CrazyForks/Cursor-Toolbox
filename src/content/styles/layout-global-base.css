@@ -115,3 +115,30 @@ body.tm-toolbox-enabled #tm-header-disclaimer .tm-header-disclaimer-caret {
   0%, 46% { opacity: 0.94; }
   47%, 100% { opacity: 0.12; }
 }
+
+@media (prefers-color-scheme: dark) {
+  body.tm-toolbox-enabled {
+    --tm-bg: #12100d;
+    --tm-surface: #1b1814;
+    --tm-surface-2: #23201a;
+    --tm-border: #2f2a23;
+    --tm-text: #f1ede7;
+    --tm-muted: #b7afa3;
+    --tm-accent: #e1d6c4;
+    --tm-scrollbar-thumb: rgba(186, 174, 160, 0.4);
+    --tm-scrollbar-thumb-hover: rgba(204, 193, 178, 0.5);
+    --tm-scrollbar-thumb-active: rgba(221, 210, 195, 0.58);
+    --tm-scrollbar-inset: transparent;
+  }
+
+  body.tm-toolbox-enabled #tm-header-disclaimer {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: linear-gradient(122deg, rgba(31, 28, 23, 0.95), rgba(24, 21, 17, 0.92));
+    color: #d6cdbf;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  body.tm-toolbox-enabled #tm-header-disclaimer::before {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}

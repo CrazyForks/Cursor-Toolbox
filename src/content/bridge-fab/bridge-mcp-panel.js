@@ -824,23 +824,309 @@ function ensureMcpPanel() {
         outline: 2px solid rgba(2, 132, 199, 0.35);
         outline-offset: 1px;
       }
+      #tm-mcp-panel .tm-mcp-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(0,0,0,.1);
+      }
+      #tm-mcp-panel .tm-mcp-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111;
+      }
+      #tm-mcp-panel .tm-mcp-body {
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        overflow: auto;
+      }
+      #tm-mcp-panel .tm-mcp-tablist {
+        display: flex;
+        gap: 8px;
+      }
+      #tm-mcp-panel .tm-mcp-tip {
+        font-size: 12px;
+        color: #667085;
+      }
+      #tm-mcp-panel .tm-mcp-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      #tm-mcp-panel .tm-mcp-save-btn {
+        border: none;
+        background: #111;
+        color: #fff;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #tm-mcp-panel .tm-mcp-status {
+        font-size: 12px;
+        color: #475467;
+        min-height: 16px;
+      }
+      #tm-mcp-panel .tm-mcp-server {
+        border: 1px solid rgba(0,0,0,.1);
+        border-radius: 10px;
+        padding: 0;
+        overflow: hidden;
+        background: #fff;
+      }
+      #tm-mcp-panel .tm-mcp-server-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        cursor: pointer;
+        background: #f8fafc;
+      }
+      #tm-mcp-panel .tm-mcp-server-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #111;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #tm-mcp-panel .tm-mcp-server-subtitle {
+        font-size: 11px;
+        color: #667085;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #tm-mcp-panel .tm-mcp-server-type {
+        font-size: 11px;
+        color: #667085;
+        white-space: nowrap;
+      }
+      #tm-mcp-panel .tm-mcp-server-body {
+        border-top: 1px solid rgba(0,0,0,.08);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #tm-mcp-panel .tm-mcp-bulk {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px dashed rgba(0,0,0,.14);
+        border-radius: 8px;
+        background: #f9fafb;
+      }
+      #tm-mcp-panel .tm-mcp-bulk-title {
+        font-size: 11px;
+        color: #667085;
+      }
+      #tm-mcp-panel .tm-mcp-bulk-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: #111;
+        cursor: pointer;
+      }
+      #tm-mcp-panel .tm-mcp-tool {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 8px;
+      }
+      #tm-mcp-panel .tm-mcp-tool-name {
+        font-size: 12px;
+        color: #111;
+        font-weight: 600;
+      }
+      #tm-mcp-panel .tm-mcp-tool-desc {
+        font-size: 11px;
+        color: #667085;
+      }
+      #tm-mcp-panel .tm-mcp-note {
+        font-size: 11px;
+        color: #667085;
+      }
+      #tm-mcp-panel .tm-mcp-note.is-error {
+        color: #b42318;
+      }
       @media (max-width: 640px) {
         #tm-mcp-panel .tm-mcp-policy-grid {
           grid-template-columns: 1fr;
         }
       }
+      @media (prefers-color-scheme: dark) {
+        #tm-mcp-panel {
+          background: #1b1814 !important;
+          border-color: rgba(255,255,255,.12) !important;
+          box-shadow: 0 16px 36px rgba(0,0,0,.55);
+          color: #f1ede7;
+        }
+        #tm-mcp-panel .tm-mcp-header {
+          border-bottom-color: rgba(255,255,255,.08) !important;
+        }
+        #tm-mcp-panel .tm-mcp-title {
+          color: #f1ede7 !important;
+        }
+        #tm-mcp-panel #tm-mcp-close {
+          color: #e7dfd2 !important;
+        }
+        #tm-mcp-panel .tm-mcp-tab {
+          background: rgba(255,255,255,.06);
+          border-color: rgba(255,255,255,.16);
+          color: #d7d0c4;
+        }
+        #tm-mcp-panel .tm-mcp-tab:hover {
+          background: rgba(255,255,255,.12);
+        }
+        #tm-mcp-panel .tm-mcp-tab.is-active {
+          background: #f1ede7;
+          border-color: #f1ede7;
+          color: #1b1814;
+        }
+        #tm-mcp-panel .tm-mcp-tool-count-badge {
+          border-color: rgba(255,255,255,.2);
+          background: rgba(255,255,255,.08);
+          color: #d7d0c4;
+        }
+        #tm-mcp-panel .tm-mcp-tool-count-badge.is-active {
+          border-color: rgba(138, 180, 255, 0.6);
+          background: rgba(31, 63, 116, 0.35);
+          color: #cfe2ff;
+        }
+        #tm-mcp-panel .tm-mcp-server-delete-btn {
+          color: #ff9b9b;
+        }
+        #tm-mcp-panel .tm-mcp-server-delete-btn:hover {
+          color: #ffd6d6;
+          background: rgba(255, 120, 120, 0.12);
+        }
+        #tm-mcp-panel .tm-mcp-json-editor {
+          background: #14110e;
+          border-color: rgba(255,255,255,.16);
+        }
+        #tm-mcp-panel .tm-mcp-json-highlight {
+          color: #f1ede7;
+        }
+        #tm-mcp-panel .tm-mcp-json-input {
+          caret-color: #f1ede7;
+        }
+        #tm-mcp-panel .tm-mcp-json-input::placeholder {
+          color: #9e9488;
+          -webkit-text-fill-color: #9e9488;
+        }
+        #tm-mcp-panel #tm-mcp-json-parse-status {
+          color: #b7afa3;
+        }
+        #tm-mcp-panel .tm-mcp-json-token-null {
+          color: #cfc6b9;
+        }
+        #tm-mcp-panel .tm-mcp-json-token-punctuation {
+          color: #9e9488;
+        }
+        #tm-mcp-panel .tm-mcp-delete-confirm {
+          background: #1b1814;
+          border-color: rgba(255,255,255,.14);
+          box-shadow: 0 10px 20px rgba(0,0,0,.45);
+        }
+        #tm-mcp-panel .tm-mcp-delete-confirm-text {
+          color: #f1ede7;
+        }
+        #tm-mcp-panel .tm-mcp-delete-confirm-btn {
+          background: rgba(255,255,255,.06);
+          border-color: rgba(255,255,255,.16);
+          color: #e7dfd2;
+        }
+        #tm-mcp-panel .tm-mcp-delete-confirm-btn.is-danger {
+          background: rgba(170, 70, 70, 0.3);
+          border-color: rgba(242, 151, 151, 0.5);
+          color: #ffd6d6;
+        }
+        #tm-mcp-panel .tm-mcp-policy-field label {
+          color: #cfc6b9;
+        }
+        #tm-mcp-panel .tm-mcp-policy-field input {
+          background: #14110e;
+          border-color: rgba(255,255,255,.16);
+          color: #f1ede7;
+        }
+        #tm-mcp-panel .tm-mcp-policy-field input:focus-visible {
+          outline-color: rgba(120, 170, 210, 0.55);
+        }
+        #tm-mcp-panel .tm-mcp-tip {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-status {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-save-btn {
+          background: #f1ede7 !important;
+          color: #1b1814 !important;
+        }
+        #tm-mcp-panel .tm-mcp-server {
+          background: #1b1814 !important;
+          border-color: rgba(255,255,255,.12) !important;
+        }
+        #tm-mcp-panel .tm-mcp-server-summary {
+          background: rgba(255,255,255,.06) !important;
+        }
+        #tm-mcp-panel .tm-mcp-server-title {
+          color: #f1ede7 !important;
+        }
+        #tm-mcp-panel .tm-mcp-server-subtitle,
+        #tm-mcp-panel .tm-mcp-server-type {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-server-body {
+          border-top-color: rgba(255,255,255,.08) !important;
+        }
+        #tm-mcp-panel .tm-mcp-bulk {
+          background: rgba(255,255,255,.05) !important;
+          border-color: rgba(255,255,255,.14) !important;
+        }
+        #tm-mcp-panel .tm-mcp-bulk-title {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-bulk-label {
+          color: #f1ede7 !important;
+        }
+        #tm-mcp-panel .tm-mcp-tool {
+          border-color: rgba(255,255,255,.12) !important;
+        }
+        #tm-mcp-panel .tm-mcp-tool-name {
+          color: #f1ede7 !important;
+        }
+        #tm-mcp-panel .tm-mcp-tool-desc {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-note {
+          color: #b7afa3 !important;
+        }
+        #tm-mcp-panel .tm-mcp-note.is-error {
+          color: #ffb4b4 !important;
+        }
+      }
     </style>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.1);">
-      <div style="font-size:13px;font-weight:600;color:#111;">MCP 工具配置</div>
-      <button id="tm-mcp-close" type="button" style="border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#666;">×</button>
+    <div class="tm-mcp-header" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.1);">
+      <div class="tm-mcp-title" style="font-size:13px;font-weight:600;color:#111;">MCP 工具配置</div>
+      <button id="tm-mcp-close" class="tm-mcp-close" type="button" style="border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:#666;">×</button>
     </div>
-    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;">
-      <div role="tablist" aria-label="MCP 配置面板标签页" style="display:flex;gap:8px;">
+    <div class="tm-mcp-body" style="padding:10px 12px;display:flex;flex-direction:column;gap:10px;overflow:auto;">
+      <div class="tm-mcp-tablist" role="tablist" aria-label="MCP 配置面板标签页" style="display:flex;gap:8px;">
         <button type="button" class="tm-mcp-tab is-active" data-mcp-tab="config" role="tab" aria-selected="true">配置</button>
         <button type="button" class="tm-mcp-tab" data-mcp-tab="tools" role="tab" aria-selected="false">工具</button>
       </div>
       <section class="tm-mcp-tab-panel" data-mcp-tab-panel="config" role="tabpanel" aria-hidden="false">
-        <div style="font-size:12px;color:#667085;">MCP工具配置：（type 仅支持 sse 和 streamable-http）</div>
+        <div class="tm-mcp-tip" style="font-size:12px;color:#667085;">MCP工具配置：（type 仅支持 sse 和 streamable-http）</div>
         <div class="tm-mcp-json-editor">
           <pre id="tm-mcp-json-highlight" class="tm-mcp-json-highlight" aria-hidden="true"></pre>
           <textarea id="tm-mcp-json" class="tm-mcp-json-input" wrap="off"></textarea>
@@ -866,15 +1152,15 @@ function ensureMcpPanel() {
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" data-tm-mcp-action="save" style="border:none;background:#111;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;">保存配置并拉取工具</button>
+        <div class="tm-mcp-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" data-tm-mcp-action="save" class="tm-mcp-save-btn" style="border:none;background:#111;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;">保存配置并拉取工具</button>
         </div>
       </section>
       <section class="tm-mcp-tab-panel" data-mcp-tab-panel="tools" role="tabpanel" aria-hidden="true" style="display:none;">
-        <div style="font-size:12px;color:#667085;">保存配置时会自动拉取每个 MCP 的工具列表。</div>
-        <div id="tm-mcp-tool-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div class="tm-mcp-tip" style="font-size:12px;color:#667085;">保存配置时会自动拉取每个 MCP 的工具列表。</div>
+        <div id="tm-mcp-tool-list" class="tm-mcp-tool-list" style="display:flex;flex-direction:column;gap:10px;"></div>
       </section>
-      <div id="tm-mcp-status" style="font-size:12px;color:#475467;min-height:16px;"></div>
+      <div id="tm-mcp-status" class="tm-mcp-status" style="font-size:12px;color:#475467;min-height:16px;"></div>
     </div>
     <div id="tm-mcp-delete-confirm" class="tm-mcp-delete-confirm">
       <div id="tm-mcp-delete-confirm-text" class="tm-mcp-delete-confirm-text">确认删除？</div>
@@ -1064,7 +1350,7 @@ function renderMcpPanel() {
   hideMcpDeleteConfirm(panel);
   const servers = state.mcpConfig.servers;
   if (!Array.isArray(servers) || servers.length === 0) {
-    toolList.innerHTML = '<div style=\"font-size:12px;color:#667085;\">暂无服务配置。请先在“配置”页填写并保存配置。</div>';
+    toolList.innerHTML = '<div class=\"tm-mcp-note\">暂无服务配置。请先在“配置”页填写并保存配置。</div>';
     repositionMcpPanel(panel);
     return;
   }
@@ -1091,14 +1377,14 @@ function renderMcpPanel() {
     const hasPartialToolSelection = enabledToolCount > 0 && enabledToolCount < totalToolCount;
     const toolsHtml = tools.length > 0
       ? `
-        <div style=\"display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border:1px dashed rgba(0,0,0,.14);border-radius:8px;background:#f9fafb;\">
-          <span style=\"font-size:11px;color:#667085;\">批量选择</span>
+        <div class=\"tm-mcp-bulk\">
+          <span class=\"tm-mcp-bulk-title\">批量选择</span>
           <span style=\"display:flex;align-items:center;gap:12px;flex-wrap:wrap;\">
-            <label style=\"display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#111;cursor:pointer;\">
+            <label class=\"tm-mcp-bulk-label\">
               <input type=\"checkbox\" data-server-id=\"${safeServerId}\" data-tool-bulk=\"all\" ${allToolsEnabled ? 'checked' : ''} ${hasPartialToolSelection ? 'data-indeterminate=\"true\"' : ''}>
               <span>全选</span>
             </label>
-            <label style=\"display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#111;cursor:pointer;\">
+            <label class=\"tm-mcp-bulk-label\">
               <input type=\"checkbox\" data-server-id=\"${safeServerId}\" data-tool-bulk=\"none\" ${noToolsEnabled ? 'checked' : ''}>
               <span>全不选</span>
             </label>
@@ -1109,31 +1395,31 @@ function renderMcpPanel() {
           const safeName = escapeHtmlText(tool.name);
           const safeDesc = escapeHtmlText(tool.description || '');
           return `
-            <label style=\"display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border:1px solid rgba(0,0,0,.08);border-radius:8px;\">
+            <label class=\"tm-mcp-tool\">
               <input type=\"checkbox\" data-server-id=\"${safeServerId}\" data-tool-name=\"${safeName}\" ${checked} style=\"margin-top:2px;\">
               <span style=\"display:flex;flex-direction:column;gap:2px;\">
-                <span style=\"font-size:12px;color:#111;font-weight:600;\">${safeName}</span>
-                <span style=\"font-size:11px;color:#667085;\">${safeDesc || '无描述'}</span>
+                <span class=\"tm-mcp-tool-name\">${safeName}</span>
+                <span class=\"tm-mcp-tool-desc\">${safeDesc || '无描述'}</span>
               </span>
             </label>
           `;
         }).join('')}
       `
       : server.type === MCP_TRANSPORT_STDIO
-        ? '<div style=\"font-size:11px;color:#667085;\">浏览器扩展不支持 stdio 直连，请改用远程 streamable-http/sse 网关。</div>'
+        ? '<div class=\"tm-mcp-note\">浏览器扩展不支持 stdio 直连，请改用远程 streamable-http/sse 网关。</div>'
         : fetchMeta?.ok === false
-          ? `<div style=\"font-size:11px;color:#b42318;\">${escapeHtmlText(fetchMeta.error || '工具拉取失败')}</div>`
-          : '<div style=\"font-size:11px;color:#667085;\">保存配置后会自动拉取工具。</div>';
+          ? `<div class=\"tm-mcp-note is-error\">${escapeHtmlText(fetchMeta.error || '工具拉取失败')}</div>`
+          : '<div class=\"tm-mcp-note\">保存配置后会自动拉取工具。</div>';
 
     return `
-      <details data-server-id=\"${safeServerId}\" ${shouldOpen ? 'open' : ''} style=\"border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:0;overflow:hidden;background:#fff;\">
-        <summary data-mcp-fold-toggle=\"1\" style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;background:#f8fafc;\">
+      <details data-server-id=\"${safeServerId}\" class=\"tm-mcp-server\" ${shouldOpen ? 'open' : ''}>
+        <summary data-mcp-fold-toggle=\"1\" class=\"tm-mcp-server-summary\">
           <span style=\"display:flex;flex-direction:column;gap:2px;min-width:0;\">
-            <span style=\"font-size:12px;font-weight:600;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">${safeServerName} (${safeServerId})</span>
-            <span style=\"font-size:11px;color:#667085;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">${server.type === MCP_TRANSPORT_STDIO ? (safeStdioCommand || '未配置 command') : (safeServerUrl || '未配置 URL')}</span>
+            <span class=\"tm-mcp-server-title\">${safeServerName} (${safeServerId})</span>
+            <span class=\"tm-mcp-server-subtitle\">${server.type === MCP_TRANSPORT_STDIO ? (safeStdioCommand || '未配置 command') : (safeServerUrl || '未配置 URL')}</span>
           </span>
           <span style=\"display:flex;align-items:center;gap:8px;flex-shrink:0;\">
-            <span style=\"font-size:11px;color:#667085;white-space:nowrap;\">${safeType}</span>
+            <span class=\"tm-mcp-server-type\">${safeType}</span>
             <span class=\"tm-mcp-tool-count-badge ${badgeStateClass}\" title=\"已启用/总工具\">${enabledToolCount}/${totalToolCount}</span>
             <button
               type=\"button\"
@@ -1153,7 +1439,7 @@ function renderMcpPanel() {
             </button>
           </span>
         </summary>
-        <div style=\"border-top:1px solid rgba(0,0,0,.08);padding:8px;display:flex;flex-direction:column;gap:6px;\">${toolsHtml}</div>
+        <div class=\"tm-mcp-server-body\">${toolsHtml}</div>
       </details>
     `;
   }).join('');

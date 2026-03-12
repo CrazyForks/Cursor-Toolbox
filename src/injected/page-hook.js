@@ -108,6 +108,63 @@ Use the SAME language as the user's latest message.
     window.postMessage({ source: BRIDGE_SOURCE_PAGE, type, payload }, window.location.origin);
   }
 
+  function readThemeHint(el) {
+    if (!el) return '';
+    const dataTheme = String(el.getAttribute('data-theme') || '').toLowerCase();
+    if (dataTheme) return dataTheme;
+    const dataScheme = String(el.getAttribute('data-color-scheme') || '').toLowerCase();
+    if (dataScheme) return dataScheme;
+    if (el.classList?.contains('dark') || el.classList?.contains('theme-dark')) return 'dark';
+    if (el.classList?.contains('light') || el.classList?.contains('theme-light')) return 'light';
+    return '';
+  }
+
+  function resolvePlainShikiThemeMode() {
+    const hint = readThemeHint(document.body) || readThemeHint(document.documentElement);
+    if (hint.includes('dark')) return 'dark';
+    if (hint.includes('light')) return 'light';
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'light';
+  }
+
+  function syncPlainShikiTheme() {
+    const mode = resolvePlainShikiThemeMode();
+    const color = mode === 'dark' ? '#f1ede7' : '#1f2937';
+    document.documentElement.style.setProperty('--tm-plain-shiki-fg', color);
+  }
+
+  function initPlainShikiThemeWatcher() {
+    syncPlainShikiTheme();
+    const media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    if (media) {
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', syncPlainShikiTheme);
+      } else if (typeof media.addListener === 'function') {
+        media.addListener(syncPlainShikiTheme);
+      }
+    }
+
+    const observer = new MutationObserver(() => syncPlainShikiTheme());
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme', 'data-color-scheme']
+    });
+
+    const observeBody = () => {
+      if (!document.body) return;
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'data-theme', 'data-color-scheme']
+      });
+    };
+
+    if (document.body) {
+      observeBody();
+    } else {
+      document.addEventListener('DOMContentLoaded', observeBody, { once: true });
+    }
+  }
+
   // =========================================================================
   // === 极限防卡顿：WASM + DefineProperty 底层双杀模块 ===
   // =========================================================================
@@ -187,7 +244,7 @@ Use the SAME language as the user's latest message.
         const mockCodeToHtml = async (code) => {
           const escaped = String(code || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           // 仅提升文字可读性，不再额外创建内层背景框
-          return `<pre class="shiki tm-plain-shiki" style="background:transparent !important; color:#1f2937 !important; border:none !important; padding:12px !important; border-radius:0 !important; overflow-x:auto; line-height:1.58; white-space:pre;"><code style="color:inherit !important; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;">${escaped}</code></pre>`;
+          return `<pre class="shiki tm-plain-shiki" style="background:transparent !important; color:var(--tm-plain-shiki-fg, #1f2937) !important; border:none !important; padding:12px !important; border-radius:0 !important; overflow-x:auto; line-height:1.58; white-space:pre;"><code style="color:inherit !important; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;">${escaped}</code></pre>`;
         };
 
         // 修改 Webpack 的模块导出行为
@@ -205,6 +262,12 @@ Use the SAME language as the user's latest message.
     initAntiLagHooks();
   } catch (e) {
     postToContent('PAGE_HOOK_LOG', { message: `防卡顿加载失败: ${e.message}` });
+  }
+
+  try {
+    initPlainShikiThemeWatcher();
+  } catch (e) {
+    postToContent('PAGE_HOOK_LOG', { message: `主题同步初始化失败: ${e.message}` });
   }
 
   // =========================================================================

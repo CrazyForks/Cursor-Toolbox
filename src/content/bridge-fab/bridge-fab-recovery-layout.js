@@ -55,6 +55,12 @@ function createFab() {
       .btn.has-value::after { content: ''; position: absolute; right: 6px; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 1px rgba(255,255,255,.9); }
       .icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
       .icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      @media (prefers-color-scheme: dark) {
+        .btn { border-color: rgba(255,255,255,.18); box-shadow: 0 1px 6px rgba(0,0,0,.45); background: rgba(255,255,255,.08); color: #f1ede7; }
+        .btn:hover { background: rgba(255,255,255,.16); box-shadow: 0 2px 10px rgba(0,0,0,.55); }
+        .btn.is-active { background: #f1ede7; color: #1b1814; }
+        .btn.has-value::after { box-shadow: 0 0 0 1px rgba(0,0,0,.65); }
+      }
     </style>
     <button class="btn" id="tm-global-prompt" title="全局提示词">
       <span class="icon" aria-hidden="true">

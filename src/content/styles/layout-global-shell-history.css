@@ -799,3 +799,236 @@ body.tm-toolbox-enabled div[class*="mb-[2px]"][class*="h-9"][class*="w-full"][cl
   display: none !important;
   pointer-events: none !important;
 }
+
+@media (prefers-color-scheme: dark) {
+  #tm-history-sidebar {
+    background: var(--tm-surface);
+    border-color: var(--tm-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  #tm-history-sidebar .tm-sidebar-top {
+    border-bottom-color: var(--tm-border);
+  }
+
+  #tm-history-sidebar .tm-history-note {
+    color: var(--tm-muted);
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  #tm-history-sidebar .tm-new-session-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: var(--tm-text);
+  }
+
+  #tm-history-sidebar .tm-new-session-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: none;
+  }
+
+  #tm-session-list .tm-session-item {
+    background: linear-gradient(164deg, rgba(34, 30, 25, 0.96), rgba(25, 22, 18, 0.95));
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--tm-text);
+  }
+
+  #tm-session-list .tm-session-item:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+    background: linear-gradient(164deg, rgba(38, 33, 27, 0.98), rgba(28, 24, 19, 0.96));
+  }
+
+  #tm-session-list .tm-session-item:disabled,
+  #tm-session-list .tm-session-item:disabled:hover {
+    background: rgba(26, 23, 19, 0.8);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+
+  .tm-session-preview,
+  .tm-session-time {
+    color: var(--tm-muted);
+  }
+
+  #tm-session-list .tm-session-delete {
+    background: rgba(33, 29, 25, 0.9);
+    border-color: rgba(242, 128, 128, 0.6);
+    color: rgba(242, 151, 151, 0.95);
+  }
+
+  #tm-session-list .tm-session-delete:hover {
+    background: rgba(44, 38, 33, 0.95);
+    border-color: rgba(242, 151, 151, 0.8);
+    color: rgba(255, 190, 190, 0.98);
+  }
+
+  #tm-session-list .tm-session-delete-confirm {
+    background: rgba(34, 30, 26, 0.96);
+    border-color: rgba(242, 151, 151, 0.34);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+  }
+
+  #tm-session-list .tm-session-delete-confirm-text {
+    color: #e7c2bf;
+  }
+
+  #tm-session-list .tm-session-delete-confirm-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #d5cdbf;
+  }
+
+  #tm-session-list .tm-session-delete-confirm-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.26);
+    color: #efe6d7;
+  }
+
+  #tm-session-list .tm-session-delete-confirm-btn.danger {
+    background: rgba(122, 52, 52, 0.35);
+    border-color: rgba(242, 151, 151, 0.46);
+    color: #ffd6d6;
+  }
+
+  #tm-session-list .tm-session-delete-confirm-btn.danger:hover {
+    background: rgba(140, 58, 58, 0.46);
+    border-color: rgba(255, 176, 176, 0.7);
+    color: #ffecec;
+  }
+
+  #tm-history-modal .tm-history-modal-backdrop {
+    background: rgba(10, 9, 7, 0.55);
+  }
+
+  #tm-history-modal .tm-history-modal-panel {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(24, 21, 17, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.6);
+  }
+
+  #tm-history-modal .tm-history-modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    background: rgba(28, 24, 19, 0.96);
+  }
+
+  #tm-history-modal .tm-history-modal-kicker,
+  #tm-history-modal #tm-history-modal-subtitle {
+    color: var(--tm-muted);
+  }
+
+  #tm-history-modal #tm-history-modal-title {
+    color: var(--tm-text);
+  }
+
+  #tm-history-modal .tm-history-modal-close {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #e7dfd2;
+  }
+
+  #tm-history-modal .tm-history-modal-close:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #fff6e8;
+  }
+
+  #tm-history-modal .tm-history-modal-body {
+    background: rgba(24, 21, 17, 0.94);
+  }
+
+  #tm-history-modal .tm-history-bubble {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  #tm-history-modal .tm-history-bubble.is-user {
+    border-color: rgba(125, 150, 190, 0.35);
+    background: rgba(60, 86, 122, 0.24);
+  }
+
+  #tm-history-modal .tm-history-bubble-role {
+    color: rgba(220, 211, 197, 0.72);
+  }
+
+  #tm-history-modal .tm-history-bubble-text {
+    color: var(--tm-text);
+  }
+
+  #tm-history-modal .tm-history-table {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  #tm-history-modal .tm-history-table th {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--tm-text);
+  }
+
+  #tm-history-modal .tm-history-table td {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  #tm-history-modal .tm-history-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  #tm-history-modal .tm-history-bubble-text > blockquote {
+    border-left-color: rgba(255, 255, 255, 0.18);
+    color: var(--tm-muted);
+  }
+
+  #tm-history-modal .tm-history-bubble-text a {
+    color: #8ab4ff;
+  }
+
+  #tm-history-modal .tm-history-inline-code {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: var(--tm-text);
+  }
+
+  #tm-history-modal .tm-history-code-lang {
+    background: rgba(52, 63, 78, 0.72);
+    border-color: rgba(154, 172, 196, 0.32);
+    color: rgba(226, 233, 243, 0.96);
+  }
+
+  #tm-history-modal .tm-history-code-copy {
+    background: rgba(60, 72, 88, 0.82);
+    border-color: rgba(200, 214, 232, 0.24);
+  }
+
+  #tm-history-modal .tm-history-code-copy:hover {
+    background: rgba(76, 90, 108, 0.92);
+    border-color: rgba(220, 232, 246, 0.4);
+  }
+
+  #tm-history-modal .tm-history-thinking {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  #tm-history-modal .tm-history-thinking summary {
+    color: var(--tm-text);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  #tm-history-modal .tm-history-thinking-content {
+    border-top-color: rgba(255, 255, 255, 0.08);
+    color: var(--tm-text);
+  }
+
+  #tm-chat-stage-wrap {
+    background: var(--tm-surface);
+    border-color: var(--tm-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  #tm-chat-stage {
+    background: var(--tm-bg);
+  }
+}
