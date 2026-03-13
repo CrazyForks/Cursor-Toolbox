@@ -1945,7 +1945,11 @@ function escapeRegexLiteral(source) {
   return String(source || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function stripContinuationMarkersForHistory(text) {
+function hasContinuationProtocolMarkers(text) {
+  return /TM_CONTINUE_(?:ACK|START|END)/i.test(String(text || ''));
+}
+
+function stripContinuationProtocolMarkers(text) {
   const source = String(text || '');
   if (!source) return '';
   return source
@@ -1954,21 +1958,21 @@ function stripContinuationMarkersForHistory(text) {
     .replace(/\\?\[TM_CONTINUE_END[:：][^\]\r\n]+\\?\]/gi, '');
 }
 
-function extractContinuationPayloadForHistory(text) {
-  const strictPayload = extractContinuationPayload(text, {
-    requireComplete: false,
+function stripContinuationMarkersForHistory(text) {
+  return sanitizeAssistantContinuationText(text, {
     preserveWhitespace: true
   });
-  if (strictPayload && typeof strictPayload.content === 'string') {
-    return strictPayload;
-  }
+}
 
+function extractLooseContinuationPayload(text, options = {}) {
   const source = String(text || '');
   if (!source) return null;
+  const requireComplete = options?.requireComplete === true;
+  const preserveWhitespace = options?.preserveWhitespace !== false;
   const startMatch = source.match(/\\?\[TM_CONTINUE_START[:：]\s*([^\]\r\n\\]{1,160})\s*\\?\]/i);
   if (!startMatch || typeof startMatch.index !== 'number') return null;
   const token = String(startMatch[1] || '').trim();
-  if (!token) return null;
+  if (!isSafeContinuationToken(token)) return null;
 
   const startMarker = startMatch[0];
   const contentStart = startMatch.index + startMarker.length;
@@ -1976,19 +1980,23 @@ function extractContinuationPayloadForHistory(text) {
   const endRe = new RegExp(`\\\\?\\[TM_CONTINUE_END[:：]\\s*${escapedToken}\\s*\\\\?\\]`, 'i');
   const endMatch = endRe.exec(source.slice(contentStart));
   const hasEndMarker = Boolean(endMatch);
+  const ackRe = new RegExp(`\\\\?\\[TM_CONTINUE_ACK[:：]\\s*${escapedToken}\\s*\\\\?\\]`, 'i');
+  const hasAckMarker = ackRe.test(source);
+  const isComplete = hasEndMarker && hasAckMarker;
+  if (requireComplete && !isComplete) return null;
   const contentEnd = hasEndMarker
     ? contentStart + Number(endMatch.index)
     : source.length;
-  const ackRe = new RegExp(`\\\\?\\[TM_CONTINUE_ACK[:：]\\s*${escapedToken}\\s*\\\\?\\]`, 'i');
-  const hasAckMarker = ackRe.test(source);
 
   return {
     token,
-    content: source.slice(contentStart, contentEnd),
+    content: preserveWhitespace
+      ? source.slice(contentStart, contentEnd)
+      : source.slice(contentStart, contentEnd).trim(),
     hasStartMarker: true,
     hasEndMarker,
     hasAckMarker,
-    isComplete: hasEndMarker && hasAckMarker
+    isComplete
   };
 }
 
@@ -2027,7 +2035,9 @@ function extractContinuationPayload(text, options = {}) {
   const requireComplete = options?.requireComplete === true;
   const preserveWhitespace = options?.preserveWhitespace !== false;
   const startMarker = findContinuationMarker(source, CONTINUE_START_PREFIX);
-  if (!startMarker) return null;
+  if (!startMarker) {
+    return extractLooseContinuationPayload(source, options);
+  }
 
   const endMarker = findContinuationMarker(source, CONTINUE_END_PREFIX, {
     fromIndex: startMarker.endIndex,
@@ -2038,7 +2048,9 @@ function extractContinuationPayload(text, options = {}) {
     expectedToken: startMarker.token
   });
   const isComplete = Boolean(ackMarker && endMarker);
-  if (requireComplete && !isComplete) return null;
+  if (requireComplete && !isComplete) {
+    return extractLooseContinuationPayload(source, options);
+  }
 
   const contentStart = startMarker.endIndex;
   const contentEnd = endMarker ? endMarker.startIndex : source.length;
@@ -2056,6 +2068,33 @@ function extractContinuationPayload(text, options = {}) {
       endMarker
     }
   };
+}
+
+function extractContinuationPayloadForHistory(text) {
+  return extractLooseContinuationPayload(text, {
+    requireComplete: false,
+    preserveWhitespace: true
+  });
+}
+
+function sanitizeAssistantContinuationText(text, options = {}) {
+  const source = String(text || '');
+  if (!source) return '';
+
+  const preserveWhitespace = options?.preserveWhitespace !== false;
+  const payload = extractContinuationPayload(source, {
+    requireComplete: false,
+    preserveWhitespace
+  });
+  if (payload && payload.hasStartMarker === true) {
+    return String(payload.content || '');
+  }
+
+  if (!hasContinuationProtocolMarkers(source)) {
+    return source;
+  }
+
+  return stripContinuationProtocolMarkers(source);
 }
 
 function normalizeContinuationSessionKey(rawSessionKey) {
@@ -2617,15 +2656,18 @@ function finalizeSessionFromApiStream(payload) {
   const sseEvents = Array.isArray(payload.sseEvents)
     ? payload.sseEvents.filter((event) => event && typeof event === 'object')
     : [];
-  const assistantText = typeof payload.assistantText === 'string'
+  const rawAssistantText = typeof payload.assistantText === 'string'
     ? payload.assistantText
     : buildAssistantTextFromSseEvents(sseEvents);
+  const assistantText = sanitizeAssistantContinuationText(rawAssistantText, {
+    preserveWhitespace: true
+  });
   const aggregateAssistantText = typeof payload.aggregateAssistantText === 'string'
     ? payload.aggregateAssistantText
     : '';
   const streamHasDoneEvent = payload.receivedDoneEvent === true;
   const interruptedByToolCode = payload.cutByToolCode === true;
-  const continuationPayload = extractContinuationPayload(assistantText, {
+  const continuationPayload = extractContinuationPayload(rawAssistantText, {
     requireComplete: false,
     preserveWhitespace: true
   });
@@ -2701,7 +2743,7 @@ function finalizeSessionFromApiStream(payload) {
   }
 
   const normalizedAggregateToolScanText = String(aggregateAssistantText || '').trim();
-  if (normalizedAggregateToolScanText) {
+  if (normalizedAggregateToolScanText && !hasContinuationProtocolMarkers(normalizedAggregateToolScanText)) {
     if (!toolScanText || interruptedByToolCode || normalizedAggregateToolScanText.length >= toolScanText.length) {
       toolScanText = normalizedAggregateToolScanText;
     }

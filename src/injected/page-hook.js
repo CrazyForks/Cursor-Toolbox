@@ -92,7 +92,7 @@ Use the SAME language as the user's latest message.
   const TOOL_STREAM_RETRY_USER_MESSAGE = '请用用户最新规定的工具调用格式调用工具，直接用，不要重复一遍格式要求了。你之前的工具调用格式不对，所以工具调用失败了。现在已经中断当前回答了，你只需要重新用正确的格式调用工具就行了，不需要再说其他的了。';
   const REWRITABLE_TOOL_STREAM_TYPES = new Set(['tool-input-start']);
   const MAX_STREAM_CAPTURE_EVENTS = 1200;
-  const CUTOFF_TAIL_DELTA_WINDOW = 5;
+  const CUTOFF_TAIL_MAX_CHARS = 360;
   const TOOL_CALL_START_PREFIX = '[TM_TOOL_CALL_START:';
   const TOOL_CALL_END_PREFIX = '[TM_TOOL_CALL_END:';
   const TOOL_CALL_MARKER_SUFFIX = ']';
@@ -411,6 +411,76 @@ Use the SAME language as the user's latest message.
       hash = Math.imul(hash, 16777619);
     }
     return (hash >>> 0).toString(36);
+  }
+
+  function escapeRegexLiteral(source) {
+    return String(source || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function stripContinuationProtocolMarkers(text) {
+    const source = String(text || '');
+    if (!source) return '';
+    return source
+      .replace(/\\?\[TM_CONTINUE_ACK[:：][^\]\r\n]+\\?\]/gi, '')
+      .replace(/\\?\[TM_CONTINUE_START[:：][^\]\r\n]+\\?\]/gi, '')
+      .replace(/\\?\[TM_CONTINUE_END[:：][^\]\r\n]+\\?\]/gi, '');
+  }
+
+  function extractContinuationPayload(text, options = {}) {
+    const source = String(text || '');
+    if (!source) return null;
+
+    const requireComplete = options?.requireComplete === true;
+    const preserveWhitespace = options?.preserveWhitespace !== false;
+    const startMatch = source.match(/\\?\[TM_CONTINUE_START[:：]\s*([^\]\r\n\\]{4,80})\s*\\?\]/i);
+    if (!startMatch || typeof startMatch.index !== 'number') return null;
+
+    const token = String(startMatch[1] || '').trim();
+    if (!/^[a-z0-9_-]{4,80}$/i.test(token)) return null;
+
+    const contentStart = startMatch.index + startMatch[0].length;
+    const escapedToken = escapeRegexLiteral(token);
+    const endRe = new RegExp(`\\\\?\\[TM_CONTINUE_END[:：]\\s*${escapedToken}\\s*\\\\?\\]`, 'i');
+    const sliceAfterStart = source.slice(contentStart);
+    const endMatch = endRe.exec(sliceAfterStart);
+    const hasEndMarker = Boolean(endMatch);
+    const ackRe = new RegExp(`\\\\?\\[TM_CONTINUE_ACK[:：]\\s*${escapedToken}\\s*\\\\?\\]`, 'i');
+    const hasAckMarker = ackRe.test(source);
+    const isComplete = hasAckMarker && hasEndMarker;
+    if (requireComplete && !isComplete) return null;
+
+    const contentEnd = hasEndMarker
+      ? contentStart + Number(endMatch.index)
+      : source.length;
+    const rawContent = source.slice(contentStart, contentEnd);
+
+    return {
+      token,
+      content: preserveWhitespace ? rawContent : rawContent.trim(),
+      hasStartMarker: true,
+      hasEndMarker,
+      hasAckMarker,
+      isComplete
+    };
+  }
+
+  function sanitizeContinuationStreamText(text) {
+    const source = String(text || '');
+    if (!source) return '';
+
+    const payload = extractContinuationPayload(source, {
+      requireComplete: false,
+      preserveWhitespace: true
+    });
+    if (payload && payload.hasStartMarker === true) {
+      return String(payload.content || '');
+    }
+
+    if (!/TM_CONTINUE_(?:ACK|START|END)/i.test(source)) {
+      return source;
+    }
+
+    return stripContinuationProtocolMarkers(source);
   }
 
   function mergeContinuationAggregate(baseText, additionText) {
@@ -1060,8 +1130,6 @@ Use the SAME language as the user's latest message.
     let cutByToolCode = false;
     let cutByToolFormatRetry = false;
     let doneEventSeen = false;
-    const recentTextDeltas = [];
-
     const emitRewriteLogOnce = () => {
       if (rewriteState.logSent || rewriteState.replacedToolEventCount <= 0) return;
       rewriteState.logSent = true;
@@ -1090,16 +1158,15 @@ Use the SAME language as the user's latest message.
       } else {
         eventsTruncated = true;
       }
-      if (typeText === 'text-delta' && typeof parsed.delta === 'string') {
-        recentTextDeltas.push(parsed.delta);
-        if (recentTextDeltas.length > CUTOFF_TAIL_DELTA_WINDOW) {
-          recentTextDeltas.shift();
-        }
-      }
       const delta = extractAssistantDeltaFromSseEvent(parsed);
       if (delta) {
         assistantText += delta;
-        aggregateAssistantText = mergeContinuationAggregate(aggregateAssistantText, delta);
+        if (isContinuationRequest) {
+          const cleanedAssistantText = sanitizeContinuationStreamText(assistantText);
+          aggregateAssistantText = mergeContinuationAggregate(previousAggregateText, cleanedAssistantText);
+        } else {
+          aggregateAssistantText = assistantText;
+        }
       }
       if (!detectedToolCode) {
         const detectionSourceText = isContinuationRequest ? aggregateAssistantText : assistantText;
@@ -1150,7 +1217,9 @@ Use the SAME language as the user's latest message.
       if (streamDoneEmitted) return;
       streamDoneEmitted = true;
 
-      const normalizedAssistantText = assistantText;
+      const normalizedAssistantText = isContinuationRequest
+        ? sanitizeContinuationStreamText(assistantText)
+        : assistantText;
       const normalizedAggregateAssistantText = isContinuationRequest
         ? trimContinuationAggregateText(mergeContinuationAggregate(previousAggregateText, normalizedAssistantText))
         : normalizedAssistantText;
@@ -1158,7 +1227,7 @@ Use the SAME language as the user's latest message.
         ? normalizedAggregateAssistantText
         : normalizedAssistantText;
       const finalDetectedToolCode = detectedToolCode || extractToolCodeBlock(toolDetectionText.trim());
-      const cutoffTailText = recentTextDeltas.join('').trim();
+      const cutoffTailText = String(toolDetectionText || '').slice(-CUTOFF_TAIL_MAX_CHARS).trim();
       const likelyUpstreamCutoff = streamed === true
         && !doneEventSeen
         && !aborted
