@@ -53,6 +53,7 @@ const MCP_TOOL_POLICY_DEFAULT_RESULT_MAX_CHARS = 0;
 const MCP_TOOL_POLICY_DEFAULT_MAX_AUTO_ROUNDS = 0;
 const MCP_TOOL_POLICY_MAX_AUTO_ROUNDS = 1000;
 const MCP_TOOL_POLICY_MAX_RESULT_MAX_CHARS = 2 * 1000 * 1000;
+const SHELL_MOBILE_BREAKPOINT = 920;
 const CONTINUE_REQUEST_PREFIX = '[TM_CONTINUE_REQUEST]';
 const CONTINUE_ACK_PREFIX = '[TM_CONTINUE_ACK:';
 const CONTINUE_START_PREFIX = '[TM_CONTINUE_START:';
@@ -114,6 +115,7 @@ const state = {
   shellHost: null,
   shellSidebar: null,
   shellStage: null,
+  shellMenuOpen: false,
 
   sessionsLoaded: false,
   sessions: [],
@@ -236,6 +238,14 @@ function sanitizeTextFragment(text, maxLen = 260) {
   const collapsed = normalizeSpace(text);
   if (collapsed.length <= maxLen) return collapsed;
   return `${collapsed.slice(0, maxLen - 1)}…`;
+}
+
+function isShellMobileViewport() {
+  const width = Math.max(
+    window.innerWidth || 0,
+    document.documentElement?.clientWidth || 0
+  );
+  return width > 0 && width <= SHELL_MOBILE_BREAKPOINT;
 }
 
 function getCurrentRoutePath() {

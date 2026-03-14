@@ -795,6 +795,7 @@ function disablePluginFeatures() {
   state.streaming = false;
   state.autoExpandAttempts = 0;
   state.startupRecoveryAttempts = 0;
+  state.shellMenuOpen = false;
   state.pendingApiSessions = {};
   state.pendingContinuationBySession = {};
   state.completedContinuationTokens = [];
@@ -844,6 +845,7 @@ function disablePluginFeatures() {
   removeHistoryModal();
   clearUserMessageMarkers();
   clearHiddenMarks();
+  document.body?.classList?.remove('tm-shell-menu-open');
   document.documentElement.style.removeProperty('--tm-shell-top');
 }
 
@@ -880,6 +882,10 @@ function init() {
   window.addEventListener('focus', () => {
     kickstartFeatureRecovery('window_focus');
   });
+  window.addEventListener('resize', () => {
+    if (!isPluginEnabled) return;
+    scheduleReconcile('viewport_resize', 80);
+  }, { passive: true });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       kickstartFeatureRecovery('visibility_visible');

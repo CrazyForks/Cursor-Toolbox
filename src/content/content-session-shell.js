@@ -1067,8 +1067,162 @@ function ensureSessionListScrollBinding() {
   list.addEventListener('scroll', onSessionListScroll, { passive: true });
 }
 
+function getShellMenuButton() {
+  const button = state.shellHost?.querySelector?.('#tm-shell-menu-toggle');
+  return button instanceof HTMLButtonElement ? button : null;
+}
+
+function getShellBackdropElement() {
+  const backdrop = state.shellHost?.querySelector?.('#tm-shell-backdrop');
+  return backdrop instanceof HTMLElement ? backdrop : null;
+}
+
+function getShellMobileControlsHost() {
+  const host = state.shellHost?.querySelector?.('#tm-shell-mobile-controls');
+  return host instanceof HTMLElement ? host : null;
+}
+
+function dismissShellAnchoredMcpPanel() {
+  if (!state.mcpPanelOpen) return;
+  if (typeof removeMcpPanel === 'function') {
+    removeMcpPanel();
+  }
+  state.mcpPanelOpen = false;
+  if (typeof updateMcpButtonState === 'function') {
+    updateMcpButtonState();
+  }
+}
+
+function focusShellMenuPrimaryAction() {
+  const sidebar = state.shellSidebar;
+  if (!(sidebar instanceof HTMLElement)) return;
+
+  const primary = sidebar.querySelector(
+    '.tm-new-session-btn, #tm-session-list .tm-session-item:not(:disabled), .tm-session-delete-confirm-btn:not(:disabled)'
+  );
+  if (primary instanceof HTMLElement) {
+    primary.focus();
+    return;
+  }
+  sidebar.focus();
+}
+
+function syncShellMenuUi() {
+  const shell = state.shellHost;
+  const sidebar = state.shellSidebar;
+  if (!(shell instanceof HTMLElement) || !(sidebar instanceof HTMLElement)) return;
+
+  const mobile = isShellMobileViewport();
+  if (!mobile) {
+    state.shellMenuOpen = false;
+  }
+  const menuOpen = mobile && state.shellMenuOpen === true;
+
+  shell.classList.toggle('is-mobile', mobile);
+  shell.classList.toggle('is-menu-open', menuOpen);
+  document.body?.classList?.toggle('tm-shell-menu-open', menuOpen);
+
+  const button = getShellMenuButton();
+  if (button) {
+    button.hidden = !mobile;
+    button.setAttribute('aria-expanded', menuOpen ? 'true' : 'false');
+    button.setAttribute('aria-label', menuOpen ? '关闭工具箱菜单' : '打开工具箱菜单');
+    button.title = menuOpen ? '关闭菜单' : '打开菜单';
+  }
+
+  const backdrop = getShellBackdropElement();
+  if (backdrop) {
+    backdrop.setAttribute('aria-hidden', menuOpen ? 'false' : 'true');
+  }
+
+  if (mobile) {
+    sidebar.setAttribute('role', 'dialog');
+    sidebar.setAttribute('aria-modal', 'true');
+    sidebar.setAttribute('aria-hidden', menuOpen ? 'false' : 'true');
+    sidebar.setAttribute('tabindex', '-1');
+  } else {
+    sidebar.removeAttribute('role');
+    sidebar.removeAttribute('aria-modal');
+    sidebar.removeAttribute('aria-hidden');
+    sidebar.removeAttribute('tabindex');
+  }
+
+  if (state.mcpPanelOpen && typeof getMcpPanelElement === 'function' && typeof repositionMcpPanel === 'function') {
+    const panel = getMcpPanelElement();
+    if (panel && (!mobile || menuOpen)) {
+      requestAnimationFrame(() => repositionMcpPanel(panel));
+    }
+  }
+}
+
+function setShellMenuOpen(nextOpen, { restoreFocus = false, dismissMcpPanel = false, focusDrawer = false } = {}) {
+  if (!state.shellHost || !state.shellSidebar) return false;
+
+  const mobile = isShellMobileViewport();
+  const resolvedOpen = mobile && nextOpen === true;
+  if (!resolvedOpen && dismissMcpPanel) {
+    dismissShellAnchoredMcpPanel();
+  }
+
+  state.shellMenuOpen = resolvedOpen;
+  syncShellMenuUi();
+
+  if (resolvedOpen && focusDrawer) {
+    requestAnimationFrame(() => {
+      if (state.shellMenuOpen) {
+        focusShellMenuPrimaryAction();
+      }
+    });
+  }
+
+  if (!resolvedOpen && restoreFocus) {
+    requestAnimationFrame(() => {
+      getShellMenuButton()?.focus?.();
+    });
+  }
+
+  return resolvedOpen;
+}
+
+function closeShellMenu(options = {}) {
+  return setShellMenuOpen(false, options);
+}
+
+function toggleShellMenu() {
+  return setShellMenuOpen(!state.shellMenuOpen, {
+    restoreFocus: state.shellMenuOpen === true,
+    dismissMcpPanel: state.shellMenuOpen === true,
+    focusDrawer: state.shellMenuOpen !== true
+  });
+}
+
+function syncShellResponsiveLayout({ reason = 'manual' } = {}) {
+  if (!state.shellHost || !state.shellSidebar) return;
+
+  if (reason === 'route_change' && state.shellMenuOpen) {
+    setShellMenuOpen(false, { restoreFocus: false, dismissMcpPanel: true });
+    return;
+  }
+
+  if (!isShellMobileViewport() && state.shellMenuOpen) {
+    setShellMenuOpen(false, { restoreFocus: false, dismissMcpPanel: true });
+    return;
+  }
+
+  syncShellMenuUi();
+
+  if (isShellMobileViewport() && !state.shellMenuOpen) {
+    dismissShellAnchoredMcpPanel();
+  }
+}
+
 function onHistoryModalKeydown(event) {
   if (event.key !== 'Escape') return;
+  if (isShellMobileViewport() && state.shellMenuOpen) {
+    event.preventDefault();
+    closeShellMenu({ restoreFocus: true, dismissMcpPanel: true });
+    return;
+  }
   const modal = document.getElementById('tm-history-modal');
   if (!modal || modal.getAttribute('aria-hidden') !== 'false') return;
   event.preventDefault();
@@ -1136,6 +1290,10 @@ function closeHistorySummaryModal({ restoreFocus = false } = {}) {
   state.historyModalSessionId = null;
 
   if (restoreFocus) {
+    if (isShellMobileViewport() && !state.shellMenuOpen) {
+      getShellMenuButton()?.focus?.();
+      return;
+    }
     const firstBtn = state.shellSidebar?.querySelector?.('#tm-session-list .tm-session-item:not(:disabled)');
     firstBtn?.focus?.();
   }
@@ -1164,6 +1322,10 @@ function isSessionCardDisabled(sessionId) {
 async function openHistorySummaryModal(sessionId) {
   const session = getSessionById(sessionId);
   if (!session) return;
+
+  if (isShellMobileViewport() && state.shellMenuOpen) {
+    closeShellMenu({ restoreFocus: false, dismissMcpPanel: true });
+  }
 
   const modal = ensureHistoryModal();
   if (!modal) return;
@@ -1358,6 +1520,20 @@ function onSessionSidebarClick(event) {
   if (!(target instanceof Element)) return;
   const action = target.closest('[data-tm-action]');
 
+  if (action?.dataset.tmAction === 'toggle-shell-menu') {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleShellMenu();
+    return;
+  }
+
+  if (action?.dataset.tmAction === 'close-shell-menu') {
+    event.preventDefault();
+    event.stopPropagation();
+    closeShellMenu({ restoreFocus: true, dismissMcpPanel: true });
+    return;
+  }
+
   if (action?.dataset.tmAction === 'refresh-current-page') {
     event.preventDefault();
     event.stopPropagation();
@@ -1399,6 +1575,9 @@ function onSessionSidebarClick(event) {
     const sessionId = action.getAttribute('data-session-id');
     if (!sessionId) return;
     pendingDeleteSessionId = null;
+    if (isShellMobileViewport()) {
+      closeShellMenu({ restoreFocus: false, dismissMcpPanel: true });
+    }
     void openHistorySummaryModal(sessionId);
     return;
   }
@@ -1410,6 +1589,7 @@ function ensureChatShell() {
     ensureSessionListScrollBinding();
     ensureHistoryModal();
     renderSessionSidebar();
+    syncShellResponsiveLayout({ reason: 'ensure' });
     return state.shellHost;
   }
   if (!document.body) return null;
@@ -1417,7 +1597,28 @@ function ensureChatShell() {
   const shell = document.createElement('div');
   shell.id = 'tm-chat-shell';
   shell.innerHTML = `
-    <div id="tm-shell-backdrop" aria-hidden="true"></div>
+    <div id="tm-shell-mobile-bar">
+      <button
+        id="tm-shell-menu-toggle"
+        class="tm-shell-menu-toggle"
+        type="button"
+        data-tm-action="toggle-shell-menu"
+        aria-controls="tm-history-sidebar"
+        aria-expanded="false"
+        aria-label="打开工具箱菜单"
+        title="打开菜单"
+      >
+        <span class="tm-shell-menu-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M4 7h16"></path>
+            <path d="M4 12h16"></path>
+            <path d="M4 17h16"></path>
+          </svg>
+        </span>
+        <span class="tm-shell-menu-text">菜单</span>
+      </button>
+    </div>
+    <div id="tm-shell-backdrop" aria-hidden="true" data-tm-action="close-shell-menu"></div>
     <aside id="tm-history-sidebar" aria-label="会话历史">
       <div class="tm-sidebar-top">
         <div class="tm-history-note">${renderHistoryNoteHtml(false)}</div>
@@ -1426,6 +1627,10 @@ function ensureChatShell() {
             + 新建会话
           </button>
         </div>
+      </div>
+      <div class="tm-sidebar-mobile-tools" aria-label="快捷操作">
+        <div class="tm-sidebar-mobile-tools-label">快捷操作</div>
+        <div id="tm-shell-mobile-controls"></div>
       </div>
       <div id="tm-session-list" role="list"></div>
     </aside>
@@ -1440,6 +1645,7 @@ function ensureChatShell() {
   ensureHistoryModal();
   ensureSessionListScrollBinding();
   renderSessionSidebar();
+  syncShellResponsiveLayout({ reason: 'ensure' });
   return shell;
 }
 

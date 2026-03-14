@@ -374,8 +374,6 @@ function reconcileUi(reason = 'manual') {
   });
   ensureHeaderModifications();
   ensureInputPlaceholder();
-  ensureFabNearSendButton();
-  ensureThinkingToggleNearModel();
   hideTokenizerButtons(document.body, { force: reason !== 'dom_mutation' });
 
   const centered = ensureCenteredLayout();
@@ -384,6 +382,12 @@ function reconcileUi(reason = 'manual') {
   } else {
     hideStaticLayoutElements();
   }
+
+  if (typeof syncShellResponsiveLayout === 'function') {
+    syncShellResponsiveLayout({ reason });
+  }
+  ensureFabNearSendButton();
+  ensureThinkingToggleNearModel();
 
   const centeredRoot = getActiveCenteredElement();
   if (centeredRoot) {

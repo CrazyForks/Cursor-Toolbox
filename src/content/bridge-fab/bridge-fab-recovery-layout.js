@@ -36,18 +36,12 @@ function createFab() {
 
   const host = document.createElement('div');
   host.id = 'tm-fab-host';
-  host.style.cssText = [
-    'display:inline-flex',
-    'align-items:center',
-    'gap:8px',
-    'flex-shrink:0',
-    'margin-right:8px',
-    'font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"'
-  ].join(';');
 
   const shadow = host.attachShadow({ mode: 'open' });
   shadow.innerHTML = `
     <style>
+      :host { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+      :host([data-tm-placement="drawer"]) { width: 100%; }
       .btn { all: initial; font-family: inherit; position: relative; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,.15); box-shadow: 0 1px 4px rgba(0,0,0,.10); background: #fff; color: #111; user-select: none; transition: all .2s; }
       .btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,.16); background: #f5f5f5; }
       .btn:active { transform: translateY(1px); }
@@ -55,6 +49,9 @@ function createFab() {
       .btn.has-value::after { content: ''; position: absolute; right: 6px; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 1px rgba(255,255,255,.9); }
       .icon { display: inline-flex; width: 16px; height: 16px; line-height: 0; }
       .icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .label { display: none; white-space: nowrap; font-size: 13px; font-weight: 600; line-height: 1; }
+      :host([data-tm-placement="drawer"]) .btn { flex: 1 1 0; width: auto; height: 44px; padding: 0 14px; border-radius: 14px; justify-content: flex-start; gap: 10px; }
+      :host([data-tm-placement="drawer"]) .label { display: inline-flex; }
       @media (prefers-color-scheme: dark) {
         .btn { border-color: rgba(255,255,255,.18); box-shadow: 0 1px 6px rgba(0,0,0,.45); background: rgba(255,255,255,.08); color: #f1ede7; }
         .btn:hover { background: rgba(255,255,255,.16); box-shadow: 0 2px 10px rgba(0,0,0,.55); }
@@ -69,6 +66,7 @@ function createFab() {
           <path d="M12.5 6.5l3.5 3.5"></path>
         </svg>
       </span>
+      <span class="label">全局提示词</span>
     </button>
     <button class="btn" id="tm-mcp" title="MCP 工具配置">
       <span class="icon" aria-hidden="true">
@@ -77,6 +75,7 @@ function createFab() {
           <path d="M4 17l3 3"></path>
         </svg>
       </span>
+      <span class="label">MCP 工具配置</span>
     </button>
   `;
 
@@ -91,9 +90,23 @@ function createFab() {
     toggleMcpPanel();
   });
 
+  applyFabPlacement(host, 'inline');
   updateMcpButtonState();
   updateGlobalPromptUi();
   return host;
+}
+
+function applyFabPlacement(host, placement = 'inline') {
+  if (!(host instanceof HTMLElement)) return;
+  const drawerPlacement = placement === 'drawer';
+  host.setAttribute('data-tm-placement', drawerPlacement ? 'drawer' : 'inline');
+  host.style.display = 'inline-flex';
+  host.style.alignItems = 'center';
+  host.style.flexShrink = '0';
+  host.style.fontFamily = 'system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"';
+  host.style.gap = drawerPlacement ? '10px' : '8px';
+  host.style.marginRight = drawerPlacement ? '0' : '8px';
+  host.style.width = drawerPlacement ? '100%' : 'auto';
 }
 
 function isVisibleComposerElement(node) {
@@ -525,6 +538,11 @@ function toggleGlobalPromptModal() {
     closeGlobalPromptModal();
     return;
   }
+  if (typeof closeShellMenu === 'function' && typeof isShellMobileViewport === 'function') {
+    if (isShellMobileViewport() && state.shellMenuOpen) {
+      closeShellMenu({ restoreFocus: false, dismissMcpPanel: true });
+    }
+  }
   openGlobalPromptModal();
 }
 
@@ -595,6 +613,7 @@ function createThinkingToggle() {
     '[Cursor Toolbox] failed to auto-send compress-summary message.'
   );
 
+  applyThinkingTogglePlacement(host, 'inline');
   updateThinkingToggleUi();
   updateContinueCutoffButtonUi();
   updateContinueAutoToggleUi();
@@ -602,11 +621,35 @@ function createThinkingToggle() {
   return host;
 }
 
+function applyThinkingTogglePlacement(host, placement = 'inline') {
+  if (!(host instanceof HTMLElement)) return;
+  host.setAttribute('data-tm-placement', placement === 'drawer' ? 'drawer' : 'inline');
+}
+
 function ensureThinkingToggleNearModel() {
+  const mobile = typeof isShellMobileViewport === 'function' && isShellMobileViewport();
+  if (mobile) {
+    const drawerHost = typeof getShellMobileControlsHost === 'function' ? getShellMobileControlsHost() : null;
+    if (!(drawerHost instanceof HTMLElement)) return false;
+
+    const host = createThinkingToggle();
+    applyThinkingTogglePlacement(host, 'drawer');
+    if (host.parentNode !== drawerHost) {
+      drawerHost.appendChild(host);
+    }
+
+    updateThinkingToggleUi();
+    updateContinueCutoffButtonUi();
+    updateContinueAutoToggleUi();
+    updateGlobalPromptUi();
+    return true;
+  }
+
   const row = findComposerMetaRow();
   if (!row) return false;
 
   const host = createThinkingToggle();
+  applyThinkingTogglePlacement(host, 'inline');
   if (host.parentNode !== row || row.lastElementChild !== host) {
     row.appendChild(host);
   }
@@ -740,8 +783,14 @@ function hasCoreUiReady() {
   const fab = document.getElementById('tm-fab-host');
   const thinkingRow = findComposerMetaRow();
   const thinkingToggle = document.getElementById('tm-thinking-toggle-host');
-  const fabReady = !sendButton || Boolean(fab && fab.parentNode === sendButton.parentNode && fab.nextSibling === sendButton);
-  const thinkingToggleReady = !thinkingRow || Boolean(thinkingToggle && thinkingToggle.parentNode === thinkingRow);
+  const mobile = typeof isShellMobileViewport === 'function' && isShellMobileViewport();
+  const drawerHost = typeof getShellMobileControlsHost === 'function' ? getShellMobileControlsHost() : null;
+  const fabReady = mobile
+    ? Boolean(fab && drawerHost && fab.parentNode === drawerHost)
+    : (!sendButton || Boolean(fab && fab.parentNode === sendButton.parentNode && fab.nextSibling === sendButton));
+  const thinkingToggleReady = mobile
+    ? Boolean(thinkingToggle && drawerHost && thinkingToggle.parentNode === drawerHost)
+    : (!thinkingRow || Boolean(thinkingToggle && thinkingToggle.parentNode === thinkingRow));
   const layoutReady = Boolean(centeredEl && centeredEl.classList.contains('tm-centered50'));
   const placeholderReady = Boolean(textarea && textarea.placeholder === PLACEHOLDER_TEXT);
   return hasChatTarget && hasInput && fabReady && thinkingToggleReady && layoutReady && placeholderReady;
@@ -795,10 +844,31 @@ function scheduleStartupRecovery(resetAttempts = false) {
 }
 
 function ensureFabNearSendButton() {
+  const mobile = typeof isShellMobileViewport === 'function' && isShellMobileViewport();
+  if (mobile) {
+    const drawerHost = typeof getShellMobileControlsHost === 'function' ? getShellMobileControlsHost() : null;
+    if (!(drawerHost instanceof HTMLElement)) return false;
+
+    const host = createFab();
+    applyFabPlacement(host, 'drawer');
+    if (host.parentNode !== drawerHost) {
+      drawerHost.appendChild(host);
+    }
+
+    syncMcpRunIndicatorUi();
+    updateGlobalPromptUi();
+    if (state.mcpPanelOpen) {
+      const panel = getMcpPanelElement();
+      if (panel) repositionMcpPanel(panel);
+    }
+    return true;
+  }
+
   const sendBtn = findSendButton();
   if (!sendBtn || !sendBtn.parentNode) return false;
 
   const host = createFab();
+  applyFabPlacement(host, 'inline');
   if (host.nextSibling !== sendBtn || host.parentNode !== sendBtn.parentNode) {
     sendBtn.parentNode.insertBefore(host, sendBtn);
   }

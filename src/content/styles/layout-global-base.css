@@ -24,6 +24,10 @@ body.tm-toolbox-enabled {
   background: var(--tm-bg);
 }
 
+body.tm-toolbox-enabled.tm-shell-menu-open {
+  overflow: hidden;
+}
+
 body.tm-toolbox-enabled .tm-shell-underlay-hidden {
   visibility: hidden !important;
   pointer-events: none !important;
